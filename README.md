@@ -53,3 +53,30 @@ Run the entire stack using Docker:
 ```bash
 docker-compose up -d
 ```
+
+# Services Quick Access
+Once the containers are healthy, you can access the system components via the following local URLs:
+
+## User Interface
+Frontend Web App: http://localhost:3000
+
+## API Documentation (Swagger/OpenAPI)
+Main Backend (Java Spring Boot): http://localhost:8080/swagger-ui/index.html
+
+AI Chatbot Service (FastAPI): http://localhost:8001/docs
+
+Recommendation Engine (FastAPI): http://localhost:8002/docs
+
+## Infrastructure & Tools
+pgAdmin (PostgreSQL GUI): http://localhost:5050
+
+Default Email: admin@admin.com | Password: admin
+
+Elasticsearch Search Engine: http://localhost:9200
+
+# Troubleshooting
+If you cannot access the services, check the status of your containers:
+
+```bash
+docker-compose ps
+```
