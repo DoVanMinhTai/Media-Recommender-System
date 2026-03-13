@@ -36,10 +36,10 @@ export default function Banner(hero: Props) {
         <div className="flex gap-3">
           <button
             onClick={handlePlayTrailer}
-            className="bg-white text-black px-8 py-2 rounded font-bold hover:bg-white/80 transition">▶ Trailer</button>
+            className="bg-white text-black px-8 py-2 rounded font-bold hover:bg-white/80 transition">Trailer</button>
           <button
             onClick={handleMoreInfo}
-            className="bg-gray-500/60 text-white px-8 py-2 rounded font-bold hover:bg-gray-500/40 transition">ⓘ Thông tin khác</button>
+            className="bg-gray-500/60 text-white px-8 py-2 rounded font-bold hover:bg-gray-500/40 transition">Thông tin khác</button>
         </div>
       </div>
     </div>

@@ -11,5 +11,6 @@ export async function sendMessage(currentInput: any) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Lỗi server: ${response.status}`);
     }
+    
     return response;
 }

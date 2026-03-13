@@ -22,12 +22,12 @@ class LLMService:
             print(f"LLM Error: {e}")
             self.model = None
 
-    def generate_natural_response(self, message: str, movies_data: list):
+    def generate_natural_response(self, message: str, movies_data: list, intent: str):
         if not self.model:
             return f"Tìm thấy {len(movies_data)} phim: " + ", ".join([m.get('title') for m in movies_data])
             
         summary = format_movie_summary(movies_data)
-        prompt = Prompts.get_natural_answer_prompt(message, summary)
+        prompt = Prompts.get_natural_answer_prompt(message, summary, intent)
         
         try:
             response = self.model(prompt, max_tokens=200, stop=["<|eot_id|>", "User:"])

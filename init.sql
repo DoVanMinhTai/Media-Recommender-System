@@ -685,3 +685,14 @@ WITH (FORMAT csv, HEADER true, DELIMITER ',', ENCODING 'UTF8');
 COPY public.episodes(id, episode_number, title, overview, still_path, season_id) 
 FROM '/docker-entrypoint-initdb.d/extracted/episodes_1.csv' 
 WITH (FORMAT csv, HEADER true, DELIMITER ',', ENCODING 'UTF8');
+
+-- Inserting a default admin user with email (admin@admin.com, password: admin) for testing purposes. The password is hashed using bcrypt.
+INSERT INTO public.users (email, full_name, password, role, user_name, is_deleted)
+VALUES (
+    'admin@admin.com',
+    'System Admin',
+    '$2a$10$IX3hVjg87kY/fqPEEIBTL..x2G3Rqf9x1JrgTwR7C73gEKDe6h0ii',
+    'ADMIN',
+    'admin',
+    false
+);

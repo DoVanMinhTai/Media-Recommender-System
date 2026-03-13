@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import  { useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getMovieDetailById, getMovieSimilarById } from "../../modules/moviedetail/services/MovieService";
 import type { Movie } from "../../modules/moviedetail/model/MovieVm";
 import { MovieHero } from "../../modules/moviedetail/components/MovieHero";
@@ -51,7 +51,8 @@ export default function MovieDetail() {
       )
     }
     {movieDetail?.id &&
-      < RatingSection mediaId={movieDetail?.id} />}
+        < RatingSection mediaId={movieDetail?.id} />
+  }
     <SimilarMovies similarMovies={similarMovies} />
     {isPlaying && <VideoOverlay movie={movieDetail} episode={undefined} onClose={function (): void {
       throw new Error("Function not implemented.");

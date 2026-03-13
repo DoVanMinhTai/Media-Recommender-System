@@ -7,18 +7,24 @@ class SearchService:
 
     def search_movies(self, params: dict):
         must_queries = []
-        field_mapping = {"title": "title", "director": "director_name", "genre": "genres", "year": "release_year"}
+        field_mapping = {"title": "title", "director": "director_name", "genre": "genres", "year": "releaseDate"}
 
         for key, value in params.items():
             if value and key in field_mapping:
-                must_queries.append({"match": {field_mapping[key]: value}})
+                must_queries.append({
+                    "match": {field_mapping[key]: 
+                    {
+                            "query": value,
+                            "fuzziness": 1,
+                            "operator": "or"
+                        }}})
 
         query = {
             "query": {"bool": {"must": must_queries if must_queries else [{"match_all": {}}]}},
             "size": 5
         }
         try:
-            res = self.es_client.search(index="movies", body=query)
+            res = self.es_client.search(index="mediacontent", body=query)
             return [hit["_source"] for hit in res["hits"]["hits"]]
         except Exception as e:
             print(f"ES Error: {e}")

@@ -9,6 +9,14 @@ from app.services.search_service import SearchService
 from app.services.llm_service import LLMService
 from app.services.helpers import extract_genres_by_regex
 from app.services.recommendation_service import RecommendationService
+import logging
+
+    
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ChatBotService")
 
 class ChatBotService:
     def __init__(self):
@@ -20,17 +28,22 @@ class ChatBotService:
 
                
     async def process_query_stream(self, message: str, userId: int):
-        intent = self.nlp.detect_intent(message)
         
+        intent = self.nlp.detect_intent(message)
+
         if intent == "SEARCH":
             search_params = self.llm_service.extract_search_params(message)
             movies_data = self.search_service.search_movies(search_params)
-            natural_answer = self.llm_service.generate_natural_response(message, movies_data)
             
+            if movies_data:
+                natural_answer = self.llm_service.generate_natural_response(message, movies_data, intent)
+            else:
+                natural_answer = "Xin lỗi, tôi không tìm thấy phim này trong hệ thống."
+                
             yield {"intent": "SEARCH", "message": natural_answer, "data": movies_data}
         
         elif intent == "RECOMMEND":
-            rec_result = self.handle_recommendation(message, userId)
+            rec_result = self.handle_recommendation(message, userId, intent)
             yield rec_result
             
         elif intent == "CHAT":
@@ -44,7 +57,7 @@ class ChatBotService:
                 "data": None
             } 
 
-    def handle_recommendation(self, message: str, userId: int):
+    def handle_recommendation(self, message: str, userId: int, intent: str):
         extracted = extract_genres_by_regex(message)
         ref_movie = self.llm_service.extract_reference_movie(message)
             
@@ -66,7 +79,7 @@ class ChatBotService:
         
         rec_results = self.recommendation_service.call_recommendation(rec_inputs)
             
-        msg = self.llm_service.generate_natural_response(message, rec_results)
+        msg = self.llm_service.generate_natural_response(message, rec_results, intent)
         return {"intent": "RECOMMEND", "message": msg, "data": rec_results}
     
     def handle_chat(self, message: str):

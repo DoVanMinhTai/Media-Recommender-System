@@ -1,31 +1,36 @@
 import { useEffect, useRef, useState } from "react";
 import { sendMessage } from "../service/ChatBotService";
+import type { MovieThumbnailVm } from "../../moviedetail/model/MovieThumbnailVm";
+import { MovieCard } from "./MovieCard";
 
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { id: 1, role: 'bot', text: 'Xin chào! Bạn muốn tìm phim gì hôm nay?' },
+        { id: 1, role: 'bot', text: 'Xin chào! Bạn muốn tìm phim gì hôm nay?', movies: [] as MovieThumbnailVm[] },
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const accumulatedTextRef = useRef("");
+    const currentMoviesRef = useRef<MovieThumbnailVm[]>([]);
+    const lastUpdateRef = useRef(0);
 
     useEffect(() => {
-        if(scrollRef.current) {
+        if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages])
     const handleSend = async () => {
         if (!input.trim()) return;
 
-        const userMsg = { id: Date.now(), role: 'user', text: input };
+        const userMsg = { id: Date.now(), role: 'user', text: input, movies: [] as MovieThumbnailVm[] };
         setMessages(prev => [...prev, userMsg]);
         const currentInput = input;
         setInput("");
         setIsTyping(true);
 
         const botMsgId = Date.now() + 1;
-        setMessages(prev => [...prev, { id: botMsgId, role: 'bot', text: "" }]);
+        setMessages(prev => [...prev, { id: botMsgId, role: 'bot', text: "", movies: [] as MovieThumbnailVm[] }]);
 
         try {
             const response = await sendMessage(currentInput)
@@ -35,7 +40,6 @@ export default function Chatbot() {
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let accumulatedText = "";
 
             while (true) {
                 const { value, done } = await reader.read();
@@ -71,21 +75,42 @@ export default function Chatbot() {
                             content = parts[parts.length - 1].trim();
                         }
 
-                        accumulatedText = content;
+                        accumulatedTextRef.current = content;
+                        if (parsed.data) {
+                            currentMoviesRef.current = parsed.data;
+                        }
 
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === botMsgId ? { ...msg, text: accumulatedText } : msg
-                        ));
+                        const now = Date.now();
+                        if (now - lastUpdateRef.current > 80) {
+                            updateUI(botMsgId);
+                            lastUpdateRef.current = now;
+                        }
                     } catch (e) {
                         console.error("Lỗi parse JSON tại dòng:", textToParse, e);
                     }
                 }
+                updateUI(botMsgId);
             }
         } catch (error) {
             console.error("Streaming error:", error);
         } finally {
             setIsTyping(false);
         }
+    };
+
+    const updateUI = (botMsgId: number) => {
+        setMessages(prev => {
+            const index = prev.findIndex(m => m.id === botMsgId);
+            if (index === -1) return prev;
+
+            const newMessages = [...prev];
+            newMessages[index] = {
+                ...newMessages[index],
+                text: accumulatedTextRef.current,
+                movies: currentMoviesRef.current
+            };
+            return newMessages;
+        });
     };
 
     return (
@@ -111,12 +136,20 @@ export default function Chatbot() {
                     <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[14px] leading-relaxed ${
-                                    msg.role === 'user' 
-                                    ? 'bg-[#E50914] text-white rounded-tr-none' 
+                                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[14px] leading-relaxed ${msg.role === 'user'
+                                    ? 'bg-[#E50914] text-white rounded-tr-none'
                                     : 'bg-[#2F2F2F] text-gray-100 border border-white/5 rounded-tl-none'
-                                }`}>
+                                    }`}>
                                     {msg.text}
+
+                                    {msg.movies && msg.movies.length > 0 && (
+                                        <>
+                                            {msg.movies.map((movie) => (
+                                                <MovieCard key={movie.id} movie={movie} />
+                                            ))}
+                                        </>
+                                    )}
+
                                     {isTyping && msg.id === messages[messages.length - 1].id && msg.role === 'bot' && !msg.text && (
                                         <div className="flex gap-1 py-2">
                                             <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></div>
@@ -145,8 +178,8 @@ export default function Chatbot() {
                                 placeholder="Hỏi AI về phim..."
                                 className="w-full bg-[#2b2b2b] text-white text-sm rounded-lg pl-4 pr-12 py-3 focus:outline-none focus:ring-1 focus:ring-[#E50914] transition"
                             />
-                            <button onClick={handleSend} 
-                            className="text-nfRed font-bold px-2">Gửi</button>
+                            <button onClick={handleSend}
+                                className="text-nfRed font-bold px-2">Gửi</button>
                         </div>
                     </div>
                 </div>

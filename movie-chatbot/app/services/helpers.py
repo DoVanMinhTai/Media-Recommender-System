@@ -22,6 +22,6 @@ def format_movie_summary(movies_data: list) -> str:
     if not movies_data:
         return ""
     return "\n".join([
-        f"- {m.get('title')} ({m.get('release_year', 'N/A')}) bởi {m.get('director_name', 'N/A')}" 
+        f"- {m.get('title')} (Năm phát hành: {m.get('releaseDate', 'Không rõ')})" 
         for m in movies_data
     ])

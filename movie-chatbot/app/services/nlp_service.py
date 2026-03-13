@@ -2,6 +2,13 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 from app.config.config import settings
 import re
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("NLPService")
 
 class NLPService:
     def __init__(self):
@@ -18,20 +25,25 @@ class NLPService:
         }
 
     def detect_intent(self, text: str, llm_instance=None) -> str:
+        logger.info(f"--- Bắt đầu phân tích ý định cho: '{text}' ---")
 
         intent = self._detect_via_regex(text)
         if intent:
+            logger.info(f"[Tầng 1 - Regex] Khớp pattern: {intent}")
             return intent
 
         intent, score = self._detect_via_embedding(text)
+        logger.info(f"[Tầng 2 - Embedding] Dự đoán: {intent} (Score: {score:.4f})")
 
         if score > 0.6:
+            logger.info(f"-> Chấp nhận kết quả Tầng 2 (Score > 0.6)")
             return intent
 
         if llm_instance:
+            logger.info(f"-> Score thấp ({score:.4f}), chuyển sang Tầng 3 (LLM)...")
             return self._detect_via_llm(text, llm_instance)
                 
-        return intent if score > 0.4 else "UNKNOWN"
+        return intent if score > 0.3 else "UNKNOWN"
        
     def _detect_via_regex(self, text: str) -> str:
             for intent, pattern in self.quick_patterns.items():
@@ -75,6 +87,7 @@ class NLPService:
                 if label in response:
                     print(f"[Intent] Tầng 3 (LLM) xác định: {label}")
                     return label
+            logger.warning(f"[Tầng 3 - LLM] LLM trả về kết quả lạ: {response}. Default: CHAT")
             return "CHAT"
         except Exception as e:
             print(f"Lỗi Tầng 3: {e}")
