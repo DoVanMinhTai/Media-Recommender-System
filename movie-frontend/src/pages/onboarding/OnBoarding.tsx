@@ -26,11 +26,16 @@ export default function OnBoarding() {
                 },
                 body: JSON.stringify(data),
             });
-            return response.json();
+            return await response.json();
         },
         onSuccess: (data) => {
-            localStorage.setItem('token', data.token);
-            navigate('/');
+            console.log("Dữ liệu nhận được từ server:", data);
+            if (data && data.token) {
+                localStorage.setItem('token', data.token);
+                navigate('/');
+            } else {
+                console.error("Không tìm thấy token trong response!");
+            }
         }
     });
 
