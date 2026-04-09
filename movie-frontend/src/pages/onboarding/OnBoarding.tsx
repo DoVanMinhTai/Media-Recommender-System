@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { Genre } from "../../modules/category/model/Genre";
 import { getAllGenre } from "../../modules/category/service/CategoryService";
 import { getAuthData } from "../../common/auth/AuthUtils";
+import { submitOnBoarding } from "../../modules/onboarding/service/OnBoardingService";
 
 export default function OnBoarding() {
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
@@ -19,15 +20,7 @@ export default function OnBoarding() {
 
     const mutation = useMutation({
         mutationFn: async (data: { genres: number[] }) => {
-            const response = await fetch('http://localhost:8080/user/onboarding', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(data),
-            });
-            return await response.json();
+            return submitOnBoarding({ preferences: data.genres });
         },
         onSuccess: (data) => {
             if (data && data.token) {

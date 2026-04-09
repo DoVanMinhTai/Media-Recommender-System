@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
     SEARCH: {
         SUGGEST: `${BASE_URL}/search/suggest`,
         ALL: `${BASE_URL}/search/all`,
+    },
+    ONBOARDING: {
+        POST: `${BASE_URL}/user/onboarding`,
     }
-
 } as const;
