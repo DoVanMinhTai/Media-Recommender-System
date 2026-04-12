@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from "../../../common/constants/ApiEndpoints";
+import { API_ENDPOINTS } from "../../../constants/ApiEndpoints";
 import type { ChatPostVm } from "../model/ChatPostVm";
 
 export async function sendMessage(chatPostVm: ChatPostVm) {

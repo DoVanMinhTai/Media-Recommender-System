@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from "../../../common/constants/ApiEndpoints";
+import { API_ENDPOINTS } from "../../../constants/ApiEndpoints";
 
 export async function getWatchList(): Promise<any> {
     const response = await fetch(API_ENDPOINTS.USER.GET_FAVORITES, {

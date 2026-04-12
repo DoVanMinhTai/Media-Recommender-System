@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from "../../../common/constants/ApiEndpoints";
+import { API_ENDPOINTS } from "../../../constants/ApiEndpoints";
 import apiClientService from "../../../common/services/ApiClientService";
 import type { MediaContentGetVm } from "../model/MediaContentGetVm";
 import type { MovieThumbnailGetVm } from "../model/MovieThumbnailGetVm";

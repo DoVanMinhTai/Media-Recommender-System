@@ -11,7 +11,7 @@ MOVIE_DATA_DIR = os.path.join(DATA_DIR, 'movielens')
 EXTRACTED_DATA_DIR = os.path.join(ETL_DIR, 'extracted')
 folder_name = datetime.now().strftime("%Y%m%d")
 SESSION_DIR = os.path.join(EXTRACTED_DATA_DIR, folder_name)
-DB_URL = "postgresql://neondb_owner:npg_EcIyZKa6V3GW@ep-shy-hill-a1rkbrs1-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+DB_URL = os.getenv("DB_URL")
 
 def auto_import_data():
     try:
