@@ -25,7 +25,7 @@ public class ChatbotService {
         URI url = UriComponentsBuilder.fromHttpUrl(serviceUrlConfig.chatbot())
                 .path("/chatbot/sendMessage")
                 .build().toUri();
-
+        System.out.println(url);
         return webClient.post().uri(url).bodyValue(chatRequest)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()

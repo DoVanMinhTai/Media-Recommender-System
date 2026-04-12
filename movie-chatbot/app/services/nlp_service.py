@@ -50,8 +50,8 @@ class NLPService:
     def _detect_via_regex(self, text: str) -> str:
         patterns = {
              "CHAT": r"\b(chào|hi|hello|hey)\b",
-+            "SEARCH": r"\b(tìm phim|thông tin về|ai đóng vai)\b",
-+            "RECOMMEND": r"\b(gợi ý|đề xuất|nên xem phim gì)\b"
+            "SEARCH": r"\b(tìm phim|thông tin về|ai đóng vai)\b",
+            "RECOMMEND": r"\b(gợi ý|đề xuất|nên xem phim gì)\b"
         }
         for intent, pattern in patterns.items():
             if re.search(pattern, text.lower()):
