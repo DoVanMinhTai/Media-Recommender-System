@@ -22,11 +22,15 @@ public class ChatbotService {
     private final RestClient restClient;
 
     public Flux<String> sendMessage(ChatPostVm chatRequest) {
-        URI url = UriComponentsBuilder.fromHttpUrl(serviceUrlConfig.chatbot())
-                .path("/chatbot/sendMessage")
-                .build().toUri();
-        System.out.println(url);
-        return webClient.post().uri(url).bodyValue(chatRequest)
+        String baseUrl = serviceUrlConfig.chatbot().replaceAll("/$", "");
+        String finalUrl = baseUrl + "/chatbot/sendMessage";
+
+        System.out.println("DEBUG: Sending POST to " + finalUrl);
+//        URI url = UriComponentsBuilder.fromHttpUrl(serviceUrlConfig.chatbot())
+//                .path("/chatbot/sendMessage")
+//                .build().toUri();
+
+        return webClient.post().uri(finalUrl).bodyValue(chatRequest)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
                 .bodyToFlux(String.class)

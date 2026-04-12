@@ -3,7 +3,8 @@ from app.config.config import settings
 
 class SearchService:
     def __init__(self):
-        self.es_client = AsyncElasticsearch(hosts=settings.es_host)
+        self.es_client = AsyncElasticsearch(hosts=settings.es_host,     
+        headers={"Accept": "application/json", "Content-Type": "application/json"})
 
     async def search_movies(self, params: dict):
         must_queries = []

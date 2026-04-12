@@ -35,23 +35,27 @@ class ChatBotService:
         }
 
     async def process_query_stream(self, message: str, userId: int):
-        
-        intent = self.nlp.detect_intent(message)
+        logger.info(f"Starting process_query_stream for user {userId}")
+        try:
+            intent = self.nlp.detect_intent(message)
 
-        if intent == "SEARCH":
-            result = await self.handle_search(message)
-        elif intent == "RECOMMEND":
-            result = await self.handle_recommendation(message, userId, intent)
-        elif intent == "CHAT":
-            result = await self.handle_chat(message)
-        else:
-            result = {
-                "message": "Xin lỗi, tôi chưa hiểu rõ ý bạn. Bạn muốn tìm thông tin phim hay cần gợi ý phim?",
-            } 
+            if intent == "SEARCH":
+                result = await self.handle_search(message)
+            elif intent == "RECOMMEND":
+                result = await self.handle_recommendation(message, userId, intent)
+            elif intent == "CHAT":
+                result = await self.handle_chat(message)
+            else:
+                result = {
+                    "message": "Xin lỗi, tôi chưa hiểu rõ ý bạn. Bạn muốn tìm thông tin phim hay cần gợi ý phim?",
+                } 
 
-        suggestions = self.llm_service.generate_suggestions(user_query=message, bot_response=result["message"], intent=intent)
+            suggestions = await self.llm_service.generate_suggestions(user_query=message, bot_response=result["message"], intent=intent)
 
-        yield self._format_response(intent, result["message"], data=result.get("data"), suggestions=suggestions)
+            yield self._format_response(intent, result["message"], data=result.get("data"), suggestions=suggestions)
+        except Exception as e:
+            logger.error(f"Error processing query: {e}")
+            yield self._format_response("ERROR", "Đã có lỗi xảy ra. Vui lòng thử lại sau.")
 
     async def handle_recommendation(self, message: str, userId: int, intent: str):
         extracted = extract_genres_by_regex(message)

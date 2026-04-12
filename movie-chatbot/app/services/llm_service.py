@@ -18,7 +18,7 @@ class LLMService:
             print(f"LLM Error: {e}")
             self.client = None
 
-    def generate_suggestions(self, user_query: str, bot_response: str, intent: str):
+    async def generate_suggestions(self, user_query: str, bot_response: str, intent: str):
         prompt = f"""
         Bạn là một chuyên gia tư vấn phim ảnh. 
         Dựa trên câu hỏi của người dùng: "{user_query}" 
@@ -32,7 +32,7 @@ class LLMService:
         3. Các gợi ý phải tự nhiên, kích thích sự tò mò.
         """
         try:
-            response_json = self._call_groq_api(
+            response_json = await self._call_groq_api(
                 system_prompt=prompt,
                 user_message="",
                 temperature=0.7,

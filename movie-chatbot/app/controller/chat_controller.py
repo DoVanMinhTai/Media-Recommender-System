@@ -13,6 +13,7 @@ async def chatbot(
     request: ChatRequest,
     bot: ChatBotService = Depends(get_chatbot)
 ):
+    logger.info(f"Controller received: {request.dict()}")
     try:
         if not request.message.strip():
             raise HTTPException(status_code=400, detail="Message cannot be empty")

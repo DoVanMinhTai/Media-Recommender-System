@@ -20,4 +20,3 @@ class RecommendationService:
             return await self.search_service.search_movies({"genre": inputs["selected_genres"][0] if inputs["selected_genres"] else "Action"})
         
         return []
-   
