@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
 public class ChatBotController {
     private final ChatbotService chatbotService;
 
-    @PostMapping(value = "/message", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/message", produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<ServerSentEvent<String>> sendMessage(@RequestBody ChatPostVm chatPostVm) {
         return Flux.defer(() -> {
             try {

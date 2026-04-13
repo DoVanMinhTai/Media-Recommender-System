@@ -36,84 +36,53 @@ export default function Chatbot() {
 
         try {
             const response = await sendMessage(currentInput)
-            console.log("Response received:", response);
             if (!response.ok) throw new Error("Network response was not ok");
-            if (!response.body) throw new Error("ReadableStream not supported");
+            const parsed = await response.json();
+            console.log("Parsed JSON:", parsed);
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
+            let content = parsed.message || "";
 
-            while (true) {
-                const { value, done } = await reader.read();
-                console.log("Reader read - done:", done, "value:", value);
-
-                if (value) {
-                    const chunk = decoder.decode(value, { stream: true });
-                    console.log("Dữ liệu thô nhận được:", chunk);
-                }
-                if (done) {
-                    console.log("Stream finished");
-                    break;
-                }
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
-
-                for (const line of lines) {
-                    let textToParse = line.trim();
-
-                    if (textToParse.startsWith("data:")) {
-                        textToParse = textToParse.replace("data:", "").trim();
-                    }
-
-                    if (!textToParse) continue;
-
-                    try {
-                        const parsed = JSON.parse(textToParse);
-
-                        let content = parsed.message || "";
-                        if (content.includes("Trình bày:") || content.includes("Trả lời:")) {
-                            const parts = content.split(/Trình bày:|Trả lời:/);
-                            content = parts[parts.length - 1].trim();
-                        }
-
-                        accumulatedTextRef.current = content;
-                        if (parsed.data) {
-                            currentMoviesRef.current = parsed.data;
-                        }
-
-                        const now = Date.now();
-                        if (now - lastUpdateRef.current > 80) {
-                            updateUI(botMsgId);
-                            lastUpdateRef.current = now;
-                        }
-                    } catch (e) {
-                        console.error("Lỗi parse JSON tại dòng:", textToParse, e);
-                    }
-                }
-                updateUI(botMsgId);
+            if (content.includes("Trình bày:") || content.includes("Trả lời:")) {
+                const parts = content.split(/Trình bày:|Trả lời:/);
+                content = parts[parts.length - 1].trim();
             }
+
+            setMessages(prev => {
+                const index = prev.findIndex(m => m.id === botMsgId);
+                if (index === -1) return prev;
+
+                const newMessages = [...prev];
+                newMessages[index] = {
+                    ...newMessages[index],
+                    text: content,
+                    movies: parsed.data || []
+                };
+                return newMessages;
+            });
+
         } catch (error) {
-            console.error("Streaming error:", error);
+            setMessages(prev => prev.map(m =>
+                m.id === botMsgId ? { ...m, text: "Xin lỗi, tôi gặp sự cố khi kết nối." } : m
+            ));
         } finally {
             setIsTyping(false);
         }
     };
 
-    const updateUI = (botMsgId: number) => {
-        setMessages(prev => {
-            const index = prev.findIndex(m => m.id === botMsgId);
-            if (index === -1) return prev;
+    // const updateUI = (botMsgId: number) => {
+    //     setMessages(prev => {
+    //         const index = prev.findIndex(m => m.id === botMsgId);
+    //         if (index === -1) return prev;
 
-            const newMessages = [...prev];
-            newMessages[index] = {
-                ...newMessages[index],
-                text: accumulatedTextRef.current,
-                movies: currentMoviesRef.current
-            };
-            return newMessages;
-        });
-    };
+    //         const newMessages = [...prev];
+    //         newMessages[index] = {
+    //             ...newMessages[index],
+    //             text: accumulatedTextRef.current,
+    //             movies: currentMoviesRef.current
+    //         };
+    //         return newMessages;
+    //     });
+    // };
 
     return (
         <div className="fixed bottom-6 right-6 z-[9999] font-sans antialiased">
