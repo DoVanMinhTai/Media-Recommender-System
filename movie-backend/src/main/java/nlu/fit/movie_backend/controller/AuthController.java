@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @AllArgsConstructor
 public class AuthController {
-public class AuthController {
     private final AuthService authService;
     private final JWTService jWTService;
 
