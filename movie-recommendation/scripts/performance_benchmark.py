@@ -145,7 +145,6 @@ class PerformanceBenchmark:
         if not recommended_indices:
             return {'precision': 0, 'recall': 0, 'diversity': 0}
             
-        # Calculate precision and recall
         recommended_set = set(recommended_indices)
         ground_truth_set = set(ground_truth_indices)
         

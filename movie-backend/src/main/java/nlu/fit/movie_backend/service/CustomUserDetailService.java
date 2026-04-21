@@ -1,4 +1,4 @@
-package nlu.fit.movie_backend.config;
+package nlu.fit.movie_backend.service;
 
 import lombok.AllArgsConstructor;
 import nlu.fit.movie_backend.model.User;
@@ -7,8 +7,6 @@ import nlu.fit.movie_backend.repository.jpa.AuthRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import java.util.List;
 
 @org.springframework.stereotype.Service
 @AllArgsConstructor

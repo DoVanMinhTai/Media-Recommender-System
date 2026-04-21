@@ -1,7 +1,3 @@
-"""
-Embedding Service with Lazy Loading (Priority 2 Optimization)
-Reduces startup time by 8-12 seconds
-"""
 from typing import List, Optional
 from sentence_transformers import SentenceTransformer
 import numpy as np

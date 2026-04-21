@@ -20,13 +20,13 @@ class CBFQueries:
 
     TRENDING_SQL = """
         SELECT 
-            movie_id,
+            mediacontent_id as movie_id,
             COUNT(*) as rating_count,
-            AVG(rating) as avg_rating,
-            (COUNT(*) * AVG(rating)) as trending_score
+            AVG(score) as avg_rating,
+            (COUNT(*) * AVG(score)) as trending_score
         FROM ratings
         WHERE created_at >= CURRENT_DATE - (:days * INTERVAL '1 day')
-        GROUP BY movie_id
+        GROUP BY mediacontent_id
         HAVING COUNT(*) >= 5
         ORDER BY trending_score DESC
         LIMIT :top_n

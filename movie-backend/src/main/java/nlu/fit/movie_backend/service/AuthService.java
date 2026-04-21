@@ -51,7 +51,7 @@ public class AuthService {
 //                throw new ResourceNotFoundException("Email/username không tồn tại");
         }
 
-        if (!user.isActive()) {
+        if (user.isDeleted()) {
             throw new AccountLockedException("Tài khoản của bạn đã bị khóa");
         }
 

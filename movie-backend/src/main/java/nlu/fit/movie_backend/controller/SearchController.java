@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/search")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class SearchController {
     private final SearchService searchService;
 

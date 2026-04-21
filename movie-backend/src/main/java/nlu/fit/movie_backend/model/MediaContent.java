@@ -14,7 +14,7 @@ import java.util.List;
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 public abstract class MediaContent {
     @Id
-    @Column(name = "movieId")
+    @Column(name = "media_content_id")
     private Long id;
 
     @Column(name = "tmdbId", unique = true)

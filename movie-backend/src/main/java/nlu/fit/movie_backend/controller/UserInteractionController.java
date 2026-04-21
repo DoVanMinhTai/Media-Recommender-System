@@ -18,6 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 @AllArgsConstructor
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class UserInteractionController {
     private final UserService userService;
     private final RateService rateService;
@@ -78,6 +79,21 @@ public class UserInteractionController {
         String tokenSub = token.substring(7);
         Long userId = jwtService.extractUserId(tokenSub);
         return ResponseEntity.ok(rateService.checkWatchHistory(userId, mediaContentId));
+    }
+
+    @GetMapping("/api/rating/{mediaContentId}")
+    public ResponseEntity<?> getRating(@RequestHeader("Authorization") String token, @PathVariable Long mediaContentId) {
+        String tokenSub = token.substring(7);
+        Long userId = jwtService.extractUserId(tokenSub);
+        return ResponseEntity.ok(rateService.getRating(userId, mediaContentId));
+    }
+
+    @PostMapping("/api/watch")
+    public ResponseEntity<Map<String, String>> addToWatchHistory(@RequestHeader("Authorization") String token, @RequestBody Long mediaContentId) {
+        String tokenSub = token.substring(7);
+        Long userId = jwtService.extractUserId(tokenSub);
+        rateService.addToWatchHistory(userId, mediaContentId);
+        return ResponseEntity.ok(Map.of("message", "Watch history updated successfully"));
     }
 
 }

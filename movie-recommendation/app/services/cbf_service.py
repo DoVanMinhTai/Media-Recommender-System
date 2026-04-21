@@ -1,17 +1,14 @@
 from typing import List, Optional, Dict, Any
 import numpy as np
-from sqlalchemy.orm import Session
-from opensearchpy import OpenSearch, AsyncOpenSearch
-from sentence_transformers import SentenceTransformer
-from app.models.media_content import Movie, Genre
-from app.core.config import settings
-from app.constants.query_template import QueryTemplates, SearchIndex
+from opensearchpy import OpenSearch
+from app.constants.query_template import QueryTemplates, SearchIndex, ESFields
 from app.services.embed_service import EmbeddingProvider
 import logging
 
+logger = logging.getLogger(__name__)
+
 class ContentBasedService:
-    def __init__(self, db: Session, es_client: OpenSearch, embedding_provider: EmbeddingProvider):
-        self.db = db
+    def __init__(self, es_client: OpenSearch, embedding_provider: EmbeddingProvider):
         self.es = es_client
         self.embedding_provider = embedding_provider
         self.index = SearchIndex.MOVIES
@@ -40,13 +37,9 @@ class ContentBasedService:
     ) -> Dict[str, Any]:
     
         try:
-            movie = self.db.query(Movie).filter(Movie.movie_id == movie_id).first()
-            if not movie:
-                raise ValueError(f"Movie {movie_id} not found")
-
-            movie_doc = self._fetch_doc_by_id(movie_id, [ESFields.EMBEDDING])
+            movie_doc = self._fetch_doc_by_id(movie_id, [ESFields.TITLE, ESFields.EMBEDDING])
             if not movie_doc:
-                raise ValueError(f"Movie {movie_id} vector not found")
+                raise ValueError(f"Movie {movie_id} not found in Elasticsearch")
 
             query = QueryTemplates.knn_search(
                 vector=movie_doc[ESFields.EMBEDDING],
@@ -64,12 +57,12 @@ class ContentBasedService:
 
             return {
                 "movie_id": movie_id,
-                "movie_title": movie.title,
+                "movie_title": movie_doc.get(ESFields.TITLE, "Unknown"),
                 "recommendations": recommendations[:top_n]
             }
             
         except Exception as e:
-            logger.error(f"Error finding similar movies for {movie_id}: {e}")
+            logger.error(f"Error finding similar movies for {movie_id} via ES: {e}")
             raise
 
     async def get_personalized(
@@ -83,7 +76,6 @@ class ContentBasedService:
 
         try:
             centroid = None
-            
             embeddings = []
             if liked_movies:
                 for mid in liked_movies:
@@ -94,43 +86,33 @@ class ContentBasedService:
             
             if centroid:
                 query = QueryTemplates.knn_search(centroid, top_n * 2, top_n * 2, [ESFields.MOVIE_ID, ESFields.TITLE, ESFields.GENRES])
-                
                 if genres:
                     query["query"] = {"bool": {"must": [query["query"]], "filter": [{"terms": {ESFields.GENRES: genres}}]}}
-                
-                if tags:
-                    query["query"] = {"bool": {"must": [query["query"]], "filter": [{"terms": {ESFields.TAGS: tags}}]}}
             else:
                 query = {
-                "size": top_n,
-                "query": {"terms": {ESFields.GENRES: genres or ["Action"]}},
-                "sort": [{"popularity": "desc"}]
+                    "size": top_n,
+                    "query": {"match_all": {}},
+                    "sort": [{"popularity": "desc"}]
                 }
             
             results = self.es.search(index=self.index, body=query)
-            
             return {
-            "strategy": "PERSONALIZED_CBF",
-            "recommendations": [self._format_hit(h) for h in results['hits']['hits']][:top_n]
+                "strategy": "PERSONALIZED_CBF",
+                "recommendations": [self._format_hit(h) for h in results['hits']['hits']][:top_n]
             }
-            
         except Exception as e:
             logger.error(f"Error getting personalized recommendations: {e}")
             raise
 
     async def search_by_text(self, text_query: str, top_n: int = 10) -> List[Dict[str, Any]]:
-
         try:
             vector = self.embedding_provider.encode(text_query)
-        
             query = QueryTemplates.hybrid_search(
                 text_query, vector, top_n, 
                 [ESFields.MOVIE_ID, ESFields.TITLE, ESFields.GENRES, ESFields.PLOT]
             )
-        
             results = self.es.search(index=self.index, body=query)
             return [self._format_hit(h) for h in results['hits']['hits']]
-            
         except Exception as e:
             logger.error(f"Error searching by text '{text_query}': {e}")
             raise
@@ -141,64 +123,36 @@ class ContentBasedService:
         top_n: int = 10,
         sort_by: str = "popularity"
     ) -> Dict[str, Any]:
-   
         try:
+            from app.constants.cbf_queries import CBFQueries, SortOption
             sort_field = CBFQueries.SORT_MAP.get(sort_by, CBFQueries.SORT_MAP[SortOption.POPULARITY])
-            
-            results = self.es_client.search(index=self.index_name, body=QueryTemplates.genre_filter_search([genre], top_n, sort_field, [ESFields.MOVIE_ID, ESFields.TITLE, ESFields.GENRES, sort_field]))
-            
-            recommendations = [self._format_hit(h) for h in results['hits']['hits']]
-            
+            results = self.es.search(index=self.index, body=QueryTemplates.genre_filter_search([genre], top_n, sort_field, [ESFields.MOVIE_ID, ESFields.TITLE, ESFields.GENRES, sort_field]))
             return {
                 "strategy": f"GENRE_{genre.upper()}_{sort_by.upper()}",
-                "recommendations": recommendations
+                "recommendations": [self._format_hit(h) for h in results['hits']['hits']]
             }
-            
         except Exception as e:
             logger.error(f"Error getting movies by genre '{genre}': {e}")
             raise
         
     async def get_trending(
         self, 
-        time_window: str = "7d",
         top_n: int = 10
     ) -> Dict[str, Any]:
-
+        """
+        Since DB is removed, we provide trending based on popularity from ES
+        """
         try:
-            from sqlalchemy import text
-            
-            days = {"1d": 1, "7d": 7, "30d": 30}[time_window]
-            
-            results = self.db.execute(
-                text(CBFQueries.TRENDING_SQL), 
-                {"days": days, "top_n": top_n}
-            ).fetchall()
-            
-            if not results:
-                return await self.get_by_genre("Action", top_n, "popularity")
-            
-            movie_ids = [r.movie_id for r in results]
-            
-            es_query = {
-                "query": {
-                    "terms": {"movie_id": movie_ids}
-                },
-                "_source": ["movie_id", "title", "genres"]
-            }            
-            es_results = self.es_client.search(index=self.index_name, body=es_query)
-            
-            movie_map = {
-                hit['_source']['movie_id']: hit['_source']
-                for hit in es_results['hits']['hits']
+            query = {
+                "size": top_n,
+                "query": {"match_all": {}},
+                "sort": [{"popularity": "desc"}]
             }
-            
-            recommendations = [self._format_hit(h) for h in results['hits']['hits']]
-            
+            results = self.es.search(index=self.index, body=query)
             return {
-                "strategy": f"TRENDING_{time_window.upper()}",
-                "recommendations": recommendations
+                "strategy": "TRENDING_VIA_POPULARITY",
+                "recommendations": [self._format_hit(h) for h in results['hits']['hits']]
             }
-            
         except Exception as e:
-            logger.error(f"Error getting trending movies: {e}")
+            logger.error(f"Error getting trending movies via ES: {e}")
             raise

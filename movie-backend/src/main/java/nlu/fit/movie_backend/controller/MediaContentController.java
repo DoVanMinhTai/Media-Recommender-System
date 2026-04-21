@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/mediacontent")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class MediaContentController {
     private final MovieService movieService;
 

@@ -1,3 +1,4 @@
+# Stage 1: Builder
 FROM python:3.11-slim as builder
 
 WORKDIR /app
@@ -11,11 +12,18 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Tạo thư mục cache cho model ngay trong thư mục app
+# Để copy nó sang stage cuối, giúp khởi động cực nhanh trên HF
+RUN mkdir -p /app/model_cache
+ENV TRANSFORMERS_CACHE=/app/model_cache
+ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
+
 RUN python -c "from sentence_transformers import SentenceTransformer; \
-    print('Downloading model...'); \
-    model = SentenceTransformer('all-MiniLM-L6-v2'); \
+    print('Downloading model to /app/model_cache...'); \
+    model = SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/model_cache'); \
     print('Model cached successfully!')"
 
+# Stage 2: Final
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -24,26 +32,29 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy toàn bộ môi trường python đã cài đặt
+COPY --from=builder /usr/local /usr/local
+# Copy thư mục model đã được tải sẵn
+COPY --from=builder /app/model_cache /app/model_cache
 
 COPY ./app ./app
 COPY ./main.py .
 
-RUN echo "# Environment variables from HF Spaces Secrets" > .env
+# Cấu hình môi trường để app tìm thấy model tại thư mục đã copy
+ENV TRANSFORMERS_CACHE=/app/model_cache
+ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
+ENV PYTHONUNBUFFERED=1
 
-# RUN useradd -m -u 1000 appuser && \
-#     chown -R appuser:appuser /app && \
-#     mkdir -p /home/appuser/.cache && \
-#     cp -r /root/.cache/torch /home/appuser/.cache/ && \
-#     cp -r /root/.cache/huggingface /home/appuser/.cache/ && \
-#     chown -R appuser:appuser /home/appuser/.cache
+# Hugging Face yêu cầu User UID 1000 để phân quyền chính xác
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
 
-# USER appuser
+USER appuser
 
 EXPOSE 7860
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Healthcheck giúp HF Spaces biết app đã online và sẵn sàng nhận traffic
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:7860/health || exit 1
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]

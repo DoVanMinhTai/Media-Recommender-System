@@ -3,36 +3,24 @@ package nlu.fit.movie_backend.controller;
 import lombok.AllArgsConstructor;
 import nlu.fit.movie_backend.service.ChatbotService;
 import nlu.fit.movie_backend.viewmodel.chatbot.ChatPostVm;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/chatbot")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class ChatBotController {
     private final ChatbotService chatbotService;
 
-    @PostMapping(value = "/message", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Flux<ServerSentEvent<String>> sendMessage(@RequestBody ChatPostVm chatPostVm) {
-        return Flux.defer(() -> {
-            try {
-                String jsonResponse = chatbotService.sendMessage(chatPostVm);
-
-                return Flux.just(ServerSentEvent.<String>builder()
-                        .data(jsonResponse)
-                        .build());
-            } catch (Exception e) {
-                return Flux.error(e);
-            }
-        }).onErrorResume(e -> {
-            return Flux.just(ServerSentEvent.<String>builder()
-                    .data("{\"error\": \"Đã có lỗi xảy ra, vui lòng thử lại sau.\"}")
-                    .build());
-        });
+    @PostMapping("/message")
+    public ResponseEntity<String> sendMessage(@RequestBody ChatPostVm chatPostVm) {
+        try {
+            String jsonResponse = chatbotService.sendMessage(chatPostVm);
+            return ResponseEntity.ok(jsonResponse);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("{\"status\": \"error\", \"message\": \"Đã có lỗi xảy ra: " + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping("/history")

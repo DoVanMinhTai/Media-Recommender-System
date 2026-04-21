@@ -36,13 +36,12 @@ class QueryTemplates:
                             }
                         },
                         {
-                            "script_score": {
-                                "query": {"match_all": {}},
-                                "script": {
-                                    "source": "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
-                                    "params": {"query_vector": vector}
-                                },
-                                "boost": 0.7
+                            "knn": {
+                                "embedding": {
+                                    "vector": vector,
+                                    "k": size,
+                                    "boost": 0.7
+                                }
                             }
                         }
                     ]
@@ -51,6 +50,7 @@ class QueryTemplates:
             "_source": source_fields
         }
     
+    @staticmethod
     def popularity_search(size, source_fields):
         return {
             "size": size,
@@ -59,6 +59,7 @@ class QueryTemplates:
             "_source": source_fields
             }
     
+    @staticmethod
     def genre_filter_search(genres, size, sort_field, source_fields):
         return {
             "size": size,

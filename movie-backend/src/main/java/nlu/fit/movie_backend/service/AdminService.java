@@ -25,6 +25,8 @@ public class AdminService {
     private final RateRepository rateRepository;
     private final ModelRegistryRepository modelRegistryRepository;
     private final TrainingJobRepository trainingJobRepository;
+    private final WatchHistoryRepository watchHistoryRepository;
+    private final RecommendationService recommendationService;
     private final RestClient restClient;
     private final ServiceUrlConfig serviceUrlConfig;
 
@@ -32,9 +34,7 @@ public class AdminService {
         long totalUsers = userRepository.count();
         long totalMedia = mediaContentRepository.count();
         long totalRatings = rateRepository.count();
-
-//      To do: use WatchHistory Table
-        long viewsToday = 1250;
+        long viewsToday = watchHistoryRepository.count();
 
         List<MovieResponse> recentMovies = mediaContentRepository.findTop5ByOrderByIdDesc()
                 .stream()
@@ -56,7 +56,6 @@ public class AdminService {
     }
 
     public AiStatusResponse getAiStatus() {
-        // 1. Lấy model đang active
         var activeModelOpt = modelRegistryRepository.findByIsActiveTrue();
         ActiveModelDto activeModel = activeModelOpt.map(m -> new ActiveModelDto(
                 m.getModelName(), m.getVersion(), m.getRmse(),
@@ -101,4 +100,7 @@ public class AdminService {
         }
     }
 
+    public String updateRecommendation() {
+        return recommendationService.updateRecommendations();
+    }
 }

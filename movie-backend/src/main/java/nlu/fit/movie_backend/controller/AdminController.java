@@ -26,7 +26,7 @@ public class AdminController {
     private final UserService userService;
     private final AdminService adminService;
 
-    @GetMapping("/movie/statistics")
+    @GetMapping("/statistics")
     public ResponseEntity<AdminStatsResponse> getStatistics() {
         return ResponseEntity.ok(adminService.getStatistics());
     }
@@ -47,28 +47,42 @@ public class AdminController {
     }
 
     @PostMapping("/movie/addMovie")
-    public ResponseEntity<?> addMovie(@RequestBody @Validated MoviePostVm movieRequest) {
+    public ResponseEntity<?> addMovie(@RequestBody @Validated MoviePostVm movieRequest, @RequestHeader("X-Admin-Password") String adminPassword) {
+        if (!"admin123".equals(adminPassword)) {
+            return ResponseEntity.status(403).body("Mật khẩu Admin không chính xác!");
+        }
         return ResponseEntity.ok(movieService.addMovie(movieRequest));
     }
 
     @PutMapping("/movie/putMovie")
-    public ResponseEntity<?> updateMovie(@RequestBody @Validated MoviePutVm request) {
+    public ResponseEntity<?> updateMovie(@RequestBody @Validated MoviePutVm request, @RequestHeader("X-Admin-Password") String adminPassword) {
+        if (!"admin123".equals(adminPassword)) {
+            return ResponseEntity.status(403).body("Mật khẩu Admin không chính xác!");
+        }
         return ResponseEntity.ok(movieService.putMovie(request));
     }
 
     @DeleteMapping("/movie/{id}")
-    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+    public ResponseEntity<?> deleteMovie(@PathVariable Long id, @RequestHeader("X-Admin-Password") String adminPassword) {
+        if (!"admin123".equals(adminPassword)) {
+            return ResponseEntity.status(403).body("Mật khẩu Admin không chính xác!");
+        }
         movieService.deleteMovie(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/movie/ai-status")
+    @GetMapping("/ai-status")
     public ResponseEntity<AiStatusResponse> getAiStatus() {
         return ResponseEntity.ok(adminService.getAiStatus());
     }
 
-    @PostMapping("/movie/retrain-ai")
+    @PostMapping("/retrain-ai")
     public ResponseEntity<Map<String, String>> retrainAi() {
         return ResponseEntity.ok(adminService.triggerRetrain());
+    }
+
+    @PostMapping("/update-recommendations")
+    public ResponseEntity<String> updateRecommendation() {
+        return ResponseEntity.ok(adminService.updateRecommendation());
     }
 }

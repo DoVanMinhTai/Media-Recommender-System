@@ -10,7 +10,7 @@ export async function getMediaContentById(movieId: number): Promise<MediaContent
 }
 
 export async function getMovieSimilarById(movieId: number): Promise<MovieThumbnailGetVm[]> {
-    const response = await apiClientService.get(API_ENDPOINTS.MOVIE.SIMILAR(movieId));
+    const response = await apiClientService.get(API_ENDPOINTS.RECOMMENDATION.CBF.SIMILAR(movieId));
     return response.data;
 }
 
@@ -19,7 +19,21 @@ export async function canRateMovie(movieId: number): Promise<boolean> {
     return response.data;
 }
 
+export async function getRatingByMovieId(movieId: number): Promise<any> {
+    const response = await apiClientService.get(API_ENDPOINTS.USER.RATING(movieId));
+    return response.data;
+}
+
 export async function rateMovie(ratingPostVm: RatingPostVm): Promise<boolean> {
     const response = await apiClientService.post(API_ENDPOINTS.USER.RATE, ratingPostVm);
+    return response.data;
+}
+
+export async function addToWatchHistory(movieId: number): Promise<void> {
+    await apiClientService.post(API_ENDPOINTS.USER.WATCH, movieId);
+}
+
+export async function getCollaborativeFiltering(userId: number): Promise<MovieThumbnailGetVm[]> {
+    const response = await apiClientService.get(API_ENDPOINTS.RECOMMENDATION.CF.USER(userId));
     return response.data;
 }

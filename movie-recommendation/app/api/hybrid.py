@@ -14,10 +14,6 @@ def get_hybrid_recommendations(
     top_n: int = 10,
     db: Session = Depends(get_db)
 ):
-    """
-    Get recommendations using a hybrid approach combining content-based 
-    and collaborative filtering
-    """
     hybrid_service = HybridService(db, "")
     recommendations = hybrid_service.hybrid_recommendation(
         request, user_id, movie_id, top_n

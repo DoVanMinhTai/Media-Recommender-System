@@ -22,6 +22,16 @@ export default function Login() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
+  const fillCredentials = (type: 'user' | 'admin') => {
+    if (type === 'admin') {
+      setEmail('admin@adc.com');
+      setPassword('admin');
+    } else {
+      setEmail('test@gmail.com');
+      setPassword('test');
+    }
+  };
+
   function handleLogin() {
     login(email, password)
       .then((data) => {
@@ -54,6 +64,24 @@ export default function Login() {
               Đăng nhập
             </button>
           </form>
+
+          <div className="mt-6 flex flex-col gap-2">
+            <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider text-center mb-1">Dành cho HR/Tester</p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => fillCredentials('admin')}
+                className="flex-1 py-2 text-[10px] font-bold border border-zinc-700 rounded text-zinc-400 hover:bg-zinc-800 transition"
+              >
+                ADMIN ACCOUNT
+              </button>
+              <button 
+                onClick={() => fillCredentials('user')}
+                className="flex-1 py-2 text-[10px] font-bold border border-zinc-700 rounded text-zinc-400 hover:bg-zinc-800 transition"
+              >
+                USER ACCOUNT
+              </button>
+            </div>
+          </div>
 
           <div className="mt-10 text-white text-center">
             Mới tham gia Netflix?

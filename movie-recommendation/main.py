@@ -1,11 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import uvicorn
-from app.core.database import Base, engine
 from app.api import cbf, cf, hybrid
 from app.core.config import settings
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Media Recommendation System",

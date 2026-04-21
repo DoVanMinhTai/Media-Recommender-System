@@ -53,7 +53,7 @@ public class User {
     )
     private Set<Genre> preferredGenres;
 
-    private boolean isActive;
+    private boolean isDeleted;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

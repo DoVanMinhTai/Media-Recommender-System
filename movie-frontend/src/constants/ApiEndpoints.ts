@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
         DASHBOARD: `${BASE_URL}/admin/statistics`,
         AI_STATUS: `${BASE_URL}/admin/ai-status`,
         RETRAIN_AI: `${BASE_URL}/admin/retrain-ai`,
+        UPDATE_RECOMMENDATIONS: `${BASE_URL}/admin/update-recommendations`,
     },
     AUTH: {
         REGISTER: `${BASE_URL}/auth/register`,
@@ -27,14 +28,15 @@ export const API_ENDPOINTS = {
     MOVIE: {
         GENRES: `${BASE_URL}/movie/movies/genres`,
         FILTER: `${BASE_URL}/movie/movies/`,
-        SIMILAR: (movieId: number) => `${BASE_URL}/recommendation/similar/${movieId}`
     },
     MEDIA_CONTENT: {
         GET_BY_ID: (movieId: number) => `${BASE_URL}/mediacontent/${movieId}`,
     },
     USER: {
         CAN_RATE: (movieId: number) => `${BASE_URL}/user/api/checkWatchHistory/${movieId}`,
+        RATING: (movieId: number) => `${BASE_URL}/user/api/rating/${movieId}`,
         RATE: `${BASE_URL}/user/api/rateMovie`,
+        WATCH: `${BASE_URL}/user/api/watch`,
         GET_FAVORITES: `${BASE_URL}/user/api/getAllFavorites`,
         ADD_FAVORITE: `${BASE_URL}/user/api/favorites/add`,
         REMOVE_FAVORITE: (movieId: number) => `${BASE_URL}/user/api/favorites/${movieId}`,
@@ -45,5 +47,16 @@ export const API_ENDPOINTS = {
     },
     ONBOARDING: {
         POST: `${BASE_URL}/user/onboarding`,
+    },
+    RECOMMENDATION: {
+        CF: {
+            USER: (userId: number) => `${BASE_URL}/recommendation/cf/user/${userId}`,
+            SIMILAR: (movieId: number) => `${BASE_URL}/recommendation/cf/similar/${movieId}`,
+        },
+        CBF: {
+            SEARCH: `${BASE_URL}/recommendation/cbf/search`,
+            SIMILAR: (movieId: number) => `${BASE_URL}/recommendation/cbf/similar/${movieId}`,
+            TRENDING: `${BASE_URL}/recommendation/cbf/trending`,
+        }
     }
 } as const;

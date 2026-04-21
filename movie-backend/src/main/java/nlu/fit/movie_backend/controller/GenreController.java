@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/category")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class GenreController {
     private final GenreService genreService;
 
